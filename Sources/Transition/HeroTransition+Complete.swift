@@ -86,10 +86,20 @@ extension HeroTransition {
       if isPresenting != finished, !inContainerController, transitionContext != nil {
         // only happens when present a .overFullScreen VC
         // bug: http://openradar.appspot.com/radar?id=5320103646199808
-        if UIApplication.shared.statusBarFrame.height == 40.0 {
-          toView.frame.origin.y = 40.0
-        }
         UIApplication.shared.keyWindow?.addSubview(isPresenting ? fromView : toView)
+      }
+      if UIApplication.shared.statusBarFrame.height == 40.0 {
+        if isPresenting {
+          fromView.frame.origin.y = 0.0
+          toView.frame.origin.y = 0.0
+          toView.frame.size.height = UIScreen.main.bounds.size.height - 20.0
+        }
+        else {
+          if !inContainerController {
+            toView.frame.origin.y = 40.0
+            toView.frame.size.height = UIScreen.main.bounds.size.height - 40.0
+          }
+        }
       }
     }
 

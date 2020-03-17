@@ -43,12 +43,19 @@ public class Hero: NSObject {
   public static var shared = HeroTransition()
 }
 
+public protocol HeroTransitionDelegate: class {
+  func heroTransition(_ hero: HeroTransition, didUpdate state: HeroTransitionState)
+  func heroTransition(_ hero: HeroTransition, didUpdate progress: Double)
+}
+
 open class HeroTransition: NSObject {
+  public weak var delegate: HeroTransitionDelegate?
 
   public var defaultAnimation: HeroDefaultAnimationType = .auto
   public var containerColor: UIColor = .black
   public var isUserInteractionEnabled = false
   public var viewOrderingStrategy: HeroViewOrderingStrategy = .auto
+  public var defaultAnimationDirectionStrategy: HeroDefaultAnimationType.Strategy = .forceLeftToRight
 
   public internal(set) var state: HeroTransitionState = .possible {
     didSet {
@@ -56,17 +63,18 @@ open class HeroTransition: NSObject {
         beginCallback?(state == .animating)
         beginCallback = nil
       }
+      delegate?.heroTransition(self, didUpdate: state)
     }
   }
 
   public var isTransitioning: Bool { return state != .possible }
   public internal(set) var isPresenting: Bool = true
 
-  @available(*, deprecated, message: "Use isTransitioning instead")
+  @available(*, renamed: "isTransitioning")
   public var transitioning: Bool {
     return isTransitioning
   }
-  @available(*, deprecated, message: "Use isPresenting instead")
+  @available(*, renamed: "isPresenting")
   public var presenting: Bool {
     return isPresenting
   }
@@ -129,6 +137,7 @@ open class HeroTransition: NSObject {
 
         transitionContext?.updateInteractiveTransition(CGFloat(progress))
       }
+      delegate?.heroTransition(self, didUpdate: progress)
     }
   }
   lazy var progressRunner: HeroProgressRunner = {
@@ -148,6 +157,7 @@ open class HeroTransition: NSObject {
   // UINavigationController.setViewControllers not able to handle interactive transition
   internal var forceNotInteractive = false
   internal var forceFinishing: Bool?
+  internal var startingProgress: CGFloat?
 
   internal var inNavigationController = false
   internal var inTabBarController = false
